@@ -1,9 +1,7 @@
 const state = {
   questions: [],
   currentQuestion: null,
-  answersChecked: 0,
-  recentBands: [],
-  lastFeedback: null
+  answersChecked: 0
 };
 
 const statusBanner = document.querySelector("#statusBanner");
@@ -24,8 +22,7 @@ const strengthList = document.querySelector("#strengthList");
 const nextStepText = document.querySelector("#nextStepText");
 const miniHintText = document.querySelector("#miniHintText");
 const idealAnswerText = document.querySelector("#idealAnswerText");
-const answeredCount = document.querySelector("#answeredCount");
-const sessionLevel = document.querySelector("#sessionLevel");
+const feedbackEmpty = document.querySelector("#feedbackEmpty");
 const practiceProgress = document.querySelector("#practiceProgress");
 const progressCaption = document.querySelector("#progressCaption");
 
@@ -50,6 +47,18 @@ function hideStatus() {
   statusBanner.textContent = "";
 }
 
+function resetFeedback() {
+  feedbackPanel.classList.add("is-empty");
+  feedbackEmpty.classList.remove("is-hidden");
+  feedbackTitle.textContent = "Här ser du direkt vad som var bra och vad du ska lägga till.";
+  gradeBadge.textContent = "-";
+  gradeBadge.dataset.band = "";
+  strengthList.innerHTML = "";
+  nextStepText.textContent = "";
+  miniHintText.textContent = "";
+  idealAnswerText.textContent = "";
+}
+
 function chooseNextQuestion() {
   if (state.questions.length === 0) {
     return;
@@ -65,8 +74,8 @@ function chooseNextQuestion() {
     (state.answersChecked < 4 || Math.random() < 0.75);
   const chosenPool = useFocusList ? focusQuestions : list;
   const randomIndex = Math.floor(Math.random() * chosenPool.length);
+
   state.currentQuestion = chosenPool[randomIndex];
-  state.lastFeedback = null;
 
   questionPrompt.textContent = state.currentQuestion.prompt;
   focusBadge.textContent = state.currentQuestion.focusLabel || "Fokusfråga";
@@ -76,45 +85,9 @@ function chooseNextQuestion() {
   questionHint.textContent = state.currentQuestion.hint;
   questionStarter.textContent = state.currentQuestion.starter;
   answerInput.value = "";
-  answerInput.focus();
   retryButton.classList.add("is-hidden");
-  feedbackPanel.classList.add("is-hidden");
-}
-
-function updateSessionSummary() {
-  answeredCount.textContent = String(state.answersChecked);
-  updatePracticeProgress();
-
-  if (state.recentBands.length === 0) {
-    sessionLevel.textContent = "Starta med första frågan.";
-    return;
-  }
-
-  const points = state.recentBands.map((band) => {
-    if (band === "A") return 4;
-    if (band === "C") return 3;
-    if (band === "E") return 2;
-    return 1;
-  });
-
-  const average = points.reduce((sum, value) => sum + value, 0) / points.length;
-
-  if (average >= 3.5) {
-    sessionLevel.textContent = "Just nu sitter fokusfrågorna ganska bra. Fortsätt koppla ihop begrepp och förklaringar.";
-    return;
-  }
-
-  if (average >= 2.5) {
-    sessionLevel.textContent = "Du är på god väg. Försök använda fler kemiord i hela meningar på fokusfrågorna.";
-    return;
-  }
-
-  if (average >= 1.8) {
-    sessionLevel.textContent = "Du är på väg mot E eller E. Ta det viktigaste först i fokusfrågorna.";
-    return;
-  }
-
-  sessionLevel.textContent = "Vi bygger från grunden. Ta en tydlig sak i taget.";
+  answerInput.focus();
+  resetFeedback();
 }
 
 function updatePracticeProgress() {
@@ -126,7 +99,8 @@ function updatePracticeProgress() {
 }
 
 function renderFeedback(feedback) {
-  feedbackPanel.classList.remove("is-hidden");
+  feedbackPanel.classList.remove("is-empty");
+  feedbackEmpty.classList.add("is-hidden");
   feedbackTitle.textContent = feedback.encouragement;
   gradeBadge.textContent = feedback.gradeBand;
   gradeBadge.dataset.band = feedback.gradeBand;
@@ -141,7 +115,6 @@ function renderFeedback(feedback) {
   nextStepText.textContent = feedback.nextStep;
   miniHintText.textContent = feedback.miniHint;
   idealAnswerText.textContent = feedback.idealAnswer;
-
   retryButton.classList.remove("is-hidden");
 }
 
@@ -160,7 +133,7 @@ async function loadApp() {
         "warn"
       );
     } else {
-      showStatus(`OpenAI är redo. Modellen som används är ${status.model}. Fokusfrågorna kommer oftare.`, "ok");
+      showStatus(`OpenAI är redo. Modellen som används är ${status.model}.`, "ok");
     }
 
     chooseNextQuestion();
@@ -200,11 +173,7 @@ async function checkAnswer() {
     });
 
     state.answersChecked += 1;
-    state.recentBands.push(data.feedback.gradeBand);
-    state.recentBands = state.recentBands.slice(-6);
-    state.lastFeedback = data.feedback;
-
-    updateSessionSummary();
+    updatePracticeProgress();
     renderFeedback(data.feedback);
   } catch (error) {
     showStatus(error.message, "error");
