@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kemi med Isak</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="lesson-banner">
+        <div class="lesson-topbar">
+          <p class="brand-pill">KemiCoach</p>
+          <p class="mode-pill">Mobilträning</p>
+        </div>
+        <h1>En fråga i taget. Kort feedback. Fokus på rätt saker.</h1>
+        <p class="hero-text">
+          Isak tränar på de viktigaste kemifrågorna med stora knappar, korta steg och
+          snäll coaching efter varje svar.
+        </p>
+        <div class="lesson-progress">
+          <div class="progress-track">
+            <span id="practiceProgress" class="progress-fill"></span>
+          </div>
+          <p id="progressCaption" class="progress-caption">0 av 10 fokusfrågor tränade</p>
+        </div>
+      </section>
+
+      <section id="statusBanner" class="status-banner is-hidden"></section>
+
+      <section class="workspace">
+        <div class="question-card">
+          <div class="question-stage-label">Dagens bana</div>
+          <div class="card-top">
+            <div>
+              <p class="card-label">Fråga</p>
+              <h2 id="questionPrompt">Laddar fråga ...</h2>
+            </div>
+            <div class="badges">
+              <span id="focusBadge" class="badge badge-focus is-hidden">Fokusfråga</span>
+              <span id="sectionBadge" class="badge badge-soft">Avsnitt</span>
+              <span id="levelBadge" class="badge badge-strong">Nivå</span>
+            </div>
+          </div>
+
+          <div class="support-box">
+            <div>
+              <p class="support-label">Tänk på</p>
+              <p id="questionHint" class="support-text"></p>
+            </div>
+            <div>
+              <p class="support-label">Börja så här</p>
+              <p id="questionStarter" class="support-text"></p>
+            </div>
+          </div>
+
+          <label class="answer-label" for="answerInput">Isaks svar</label>
+          <textarea
+            id="answerInput"
+            rows="5"
+            placeholder="Skriv kort. Ett eller två tydliga meningar räcker ofta."
+          ></textarea>
+
+          <div class="actions">
+            <button id="checkButton" class="button button-primary">Kolla svar</button>
+            <button id="retryButton" class="button button-secondary is-hidden">Försök igen</button>
+            <button id="nextButton" class="button button-ghost">Ny fråga</button>
+          </div>
+        </div>
+
+        <aside class="side-panel">
+          <section class="panel-card progress-card">
+            <p class="card-label">Poäng just nu</p>
+            <div class="progress-meter">
+              <span id="answeredCount">0</span>
+              <p>svar kollade</p>
+            </div>
+            <div id="sessionLevel" class="session-level">Starta med första frågan.</div>
+          </section>
+
+          <section class="panel-card topics-card">
+            <p class="card-label">Extra fokus nu</p>
+            <ul>
+              <li>Testa dig själv 3.1: tvål, schampo, LIKA LÖSER LIKA och pH</li>
+              <li>Testa dig själv 3.2: lukt, bakterier, naturens dofter och parfym</li>
+              <li>Testa dig själv 3.3: risker, kroppen och farliga ämnen</li>
+            </ul>
+          </section>
+        </aside>
+      </section>
+
+      <section id="feedbackPanel" class="feedback-panel is-hidden">
+        <div class="feedback-head">
+          <div>
+            <p class="card-label">Feedback</p>
+            <h3 id="feedbackTitle">Här kommer din återkoppling</h3>
+          </div>
+          <div id="gradeBadge" class="grade-badge">E</div>
+        </div>
+
+        <div class="feedback-grid">
+          <article class="feedback-card">
+            <p class="feedback-label">Bra i ditt svar</p>
+            <ul id="strengthList"></ul>
+          </article>
+
+          <article class="feedback-card">
+            <p class="feedback-label">Nästa steg</p>
+            <p id="nextStepText"></p>
+            <p class="feedback-label feedback-label-space">Mini-ledtråd</p>
+            <p id="miniHintText"></p>
+          </article>
+
+          <article class="feedback-card feedback-card-wide">
+            <p class="feedback-label">Ett starkare svar kan låta så här</p>
+            <p id="idealAnswerText"></p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+  </html>
