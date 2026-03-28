@@ -20,6 +20,8 @@ const coachPanel = document.querySelector("#coachPanel");
 const coachMeaning = document.querySelector("#coachMeaning");
 const coachStep = document.querySelector("#coachStep");
 const coachStarterText = document.querySelector("#coachStarter");
+const coachBook = document.querySelector("#coachBook");
+const coachWords = document.querySelector("#coachWords");
 const feedbackPanel = document.querySelector("#feedbackPanel");
 const feedbackTitle = document.querySelector("#feedbackTitle");
 const gradeBadge = document.querySelector("#gradeBadge");
@@ -69,6 +71,8 @@ function resetCoachPanel() {
   coachMeaning.textContent = "";
   coachStep.textContent = "";
   coachStarterText.textContent = "";
+  coachBook.textContent = "";
+  coachWords.textContent = "";
   coachButton.disabled = false;
   coachButton.textContent = "Jag behöver hjälp";
 }
@@ -138,6 +142,8 @@ function renderCoachHelp(coach) {
   coachMeaning.textContent = coach.questionInSimpleWords;
   coachStep.textContent = coach.firstStep;
   coachStarterText.textContent = coach.sentenceStarter;
+  coachBook.textContent = coach.bookConnection;
+  coachWords.textContent = coach.lookForWords.join(", ");
 }
 
 async function loadApp() {

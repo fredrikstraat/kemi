@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#58cc02" />
     <title>Kemi med Isak</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
@@ -53,6 +54,10 @@
             id="answerInput"
             rows="5"
             placeholder="Skriv kort. Ett eller två tydliga meningar räcker ofta."
+            autocapitalize="sentences"
+            autocomplete="off"
+            autocorrect="on"
+            enterkeyhint="send"
           ></textarea>
 
           <section id="coachPanel" class="coach-panel is-hidden">
@@ -69,6 +74,14 @@
               <div class="coach-item coach-item-wide">
                 <p class="coach-label">Du kan börja så här</p>
                 <p id="coachStarter"></p>
+              </div>
+              <div class="coach-item coach-item-wide">
+                <p class="coach-label">I boken står ungefär</p>
+                <p id="coachBook"></p>
+              </div>
+              <div class="coach-item coach-item-wide">
+                <p class="coach-label">Bra ord att få med</p>
+                <p id="coachWords"></p>
               </div>
             </div>
           </section>

@@ -69,7 +69,13 @@ const feedbackSchema = {
 const coachSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["questionInSimpleWords", "firstStep", "sentenceStarter"],
+  required: [
+    "questionInSimpleWords",
+    "firstStep",
+    "sentenceStarter",
+    "bookConnection",
+    "lookForWords"
+  ],
   properties: {
     questionInSimpleWords: {
       type: "string"
@@ -79,6 +85,17 @@ const coachSchema = {
     },
     sentenceStarter: {
       type: "string"
+    },
+    bookConnection: {
+      type: "string"
+    },
+    lookForWords: {
+      type: "array",
+      items: {
+        type: "string"
+      },
+      minItems: 2,
+      maxItems: 5
     }
   }
 };
@@ -280,6 +297,7 @@ async function coachQuestion({ question }) {
       prompt: question.prompt,
       hint: question.hint,
       starter: question.starter,
+      bookSupport: question.bookSupport || "",
       shortAnswer: question.shortAnswer,
       mustMention: question.mustMention
     },
@@ -287,6 +305,8 @@ async function coachQuestion({ question }) {
       "questionInSimpleWords ska vara 1-2 korta meningar",
       "firstStep ska vara ett litet första tankesteg",
       "sentenceStarter ska vara en enkel start på ett elevsvar",
+      "bookConnection ska låta som en kort boknära hjälp, inte ett helt facit",
+      "lookForWords ska vara 2 till 5 ord eller begrepp som eleven bör leta efter eller använda",
       "ge inte ett helt facit"
     ]
   };
@@ -321,7 +341,9 @@ function buildLocalCoachHelp(question) {
   return {
     questionInSimpleWords: `Frågan vill att du visar att du förstår: ${question.prompt}`,
     firstStep: question.hint,
-    sentenceStarter: question.starter
+    sentenceStarter: question.starter,
+    bookConnection: question.bookSupport || question.shortAnswer,
+    lookForWords: (question.mustMention || []).slice(0, 4)
   };
 }
 
