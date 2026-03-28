@@ -66,6 +66,23 @@ const feedbackSchema = {
   }
 };
 
+const coachSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["questionInSimpleWords", "firstStep", "sentenceStarter"],
+  properties: {
+    questionInSimpleWords: {
+      type: "string"
+    },
+    firstStep: {
+      type: "string"
+    },
+    sentenceStarter: {
+      type: "string"
+    }
+  }
+};
+
 createServer(async (request, response) => {
   try {
     const url = new URL(request.url || "/", `http://${request.headers.host}`);
@@ -124,6 +141,23 @@ createServer(async (request, response) => {
       });
 
       return sendJson(response, 200, { feedback });
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/coach") {
+      const body = await readJsonBody(request);
+      const question = getQuestionById(body.questionId);
+
+      if (!question) {
+        return sendJson(response, 404, {
+          error: "Frågan hittades inte."
+        });
+      }
+
+      const coach = OPENAI_API_KEY
+        ? await coachQuestion({ question })
+        : buildLocalCoachHelp(question);
+
+      return sendJson(response, 200, { coach });
     }
 
     if (request.method === "GET") {
@@ -225,6 +259,116 @@ async function evaluateAnswer({ question, answer }) {
   }
 
   return JSON.parse(rawText);
+}
+
+async function coachQuestion({ question }) {
+  const section = studySections.find((item) => item.id === question.section);
+
+  const systemPrompt = [
+    "Du är en lugn och varm kemicoach för en 12-åring.",
+    "Du ska hjälpa eleven förstå frågan utan att direkt ge bort hela svaret.",
+    "Skriv mycket enkel svenska med korta meningar.",
+    "Förklara vad frågan egentligen vill att eleven ska tänka på.",
+    "Ge ett första litet steg och en startmening som eleven kan skriva vidare på.",
+    "Håll allt konkret och nära materialet. Hitta inte på extra fakta."
+  ].join(" ");
+
+  const userPrompt = {
+    sectionTitle: section?.title || question.sectionLabel,
+    sectionSummary: section?.summary || [],
+    question: {
+      prompt: question.prompt,
+      hint: question.hint,
+      starter: question.starter,
+      shortAnswer: question.shortAnswer,
+      mustMention: question.mustMention
+    },
+    outputRules: [
+      "questionInSimpleWords ska vara 1-2 korta meningar",
+      "firstStep ska vara ett litet första tankesteg",
+      "sentenceStarter ska vara en enkel start på ett elevsvar",
+      "ge inte ett helt facit"
+    ]
+  };
+
+  const payload = await requestOpenAIJson({
+    systemPrompt,
+    userPrompt,
+    schemaName: "chemistry_coach_help",
+    schema: coachSchema,
+    maxOutputTokens: 300
+  });
+
+  const rawText = extractOutputText(payload);
+
+  if (!rawText) {
+    console.error("OpenAI coach payload without readable text:");
+    console.error(JSON.stringify(payload, null, 2));
+    return buildLocalCoachHelp(question);
+  }
+
+  try {
+    return JSON.parse(rawText);
+  } catch (error) {
+    console.error("OpenAI coach text could not be parsed as JSON:");
+    console.error(rawText);
+    console.error(error);
+    return buildLocalCoachHelp(question);
+  }
+}
+
+function buildLocalCoachHelp(question) {
+  return {
+    questionInSimpleWords: `Frågan vill att du visar att du förstår: ${question.prompt}`,
+    firstStep: question.hint,
+    sentenceStarter: question.starter
+  };
+}
+
+async function requestOpenAIJson({
+  systemPrompt,
+  userPrompt,
+  schemaName,
+  schema,
+  maxOutputTokens
+}) {
+  const apiResponse = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      input: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: JSON.stringify(userPrompt, null, 2) }
+      ],
+      reasoning: {
+        effort: "low"
+      },
+      text: {
+        format: {
+          type: "json_schema",
+          name: schemaName,
+          strict: true,
+          schema
+        }
+      },
+      max_output_tokens: maxOutputTokens
+    })
+  });
+
+  const payload = await apiResponse.json();
+
+  if (!apiResponse.ok) {
+    const message =
+      payload?.error?.message ||
+      "OpenAI-svaret gick inte att hämta just nu.";
+    throw new Error(message);
+  }
+
+  return payload;
 }
 
 function extractOutputText(payload) {

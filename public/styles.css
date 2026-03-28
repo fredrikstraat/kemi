@@ -257,9 +257,50 @@ textarea:focus {
   color: #6c4400;
 }
 
+.button-helper {
+  background: linear-gradient(180deg, #ffffff, #eef7ff);
+  color: #176892;
+  border: 2px solid #c9e8f8;
+  box-shadow: none;
+}
+
 .button-ghost {
   background: linear-gradient(180deg, #2cc0ff, var(--blue));
   color: white;
+}
+
+.coach-panel {
+  margin-top: 0.85rem;
+  padding: 0.85rem;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffdf4, #f8fcff);
+  border: 2px solid #f3df9a;
+}
+
+.coach-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
+  margin-top: 0.65rem;
+}
+
+.coach-item {
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: white;
+  border: 1px solid #e7eef4;
+}
+
+.coach-label {
+  margin: 0;
+  font-weight: 800;
+  color: #7b5a00;
+}
+
+.coach-item p:last-child {
+  margin: 0.3rem 0 0;
+  color: var(--ink-soft);
+  line-height: 1.4;
 }
 
 .feedback-head {
@@ -388,5 +429,13 @@ textarea:focus {
 
   .button {
     min-width: 9rem;
+  }
+
+  .coach-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .coach-item-wide {
+    grid-column: 1 / -1;
   }
 }

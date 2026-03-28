@@ -13,8 +13,13 @@ const questionHint = document.querySelector("#questionHint");
 const questionStarter = document.querySelector("#questionStarter");
 const answerInput = document.querySelector("#answerInput");
 const checkButton = document.querySelector("#checkButton");
+const coachButton = document.querySelector("#coachButton");
 const retryButton = document.querySelector("#retryButton");
 const nextButton = document.querySelector("#nextButton");
+const coachPanel = document.querySelector("#coachPanel");
+const coachMeaning = document.querySelector("#coachMeaning");
+const coachStep = document.querySelector("#coachStep");
+const coachStarterText = document.querySelector("#coachStarter");
 const feedbackPanel = document.querySelector("#feedbackPanel");
 const feedbackTitle = document.querySelector("#feedbackTitle");
 const gradeBadge = document.querySelector("#gradeBadge");
@@ -59,6 +64,15 @@ function resetFeedback() {
   idealAnswerText.textContent = "";
 }
 
+function resetCoachPanel() {
+  coachPanel.classList.add("is-hidden");
+  coachMeaning.textContent = "";
+  coachStep.textContent = "";
+  coachStarterText.textContent = "";
+  coachButton.disabled = false;
+  coachButton.textContent = "Jag behöver hjälp";
+}
+
 function chooseNextQuestion() {
   if (state.questions.length === 0) {
     return;
@@ -87,6 +101,7 @@ function chooseNextQuestion() {
   answerInput.value = "";
   retryButton.classList.add("is-hidden");
   answerInput.focus();
+  resetCoachPanel();
   resetFeedback();
 }
 
@@ -116,6 +131,13 @@ function renderFeedback(feedback) {
   miniHintText.textContent = feedback.miniHint;
   idealAnswerText.textContent = feedback.idealAnswer;
   retryButton.classList.remove("is-hidden");
+}
+
+function renderCoachHelp(coach) {
+  coachPanel.classList.remove("is-hidden");
+  coachMeaning.textContent = coach.questionInSimpleWords;
+  coachStep.textContent = coach.firstStep;
+  coachStarterText.textContent = coach.sentenceStarter;
 }
 
 async function loadApp() {
@@ -183,7 +205,38 @@ async function checkAnswer() {
   }
 }
 
+async function getCoachHelp() {
+  if (!state.currentQuestion) {
+    showStatus("Ingen fråga laddad ännu.", "error");
+    return;
+  }
+
+  hideStatus();
+  coachButton.disabled = true;
+  coachButton.textContent = "Hjälper ...";
+
+  try {
+    const data = await fetchJson("/api/coach", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        questionId: state.currentQuestion.id
+      })
+    });
+
+    renderCoachHelp(data.coach);
+  } catch (error) {
+    showStatus(error.message, "error");
+  } finally {
+    coachButton.disabled = false;
+    coachButton.textContent = "Jag behöver hjälp";
+  }
+}
+
 checkButton.addEventListener("click", checkAnswer);
+coachButton.addEventListener("click", getCoachHelp);
 nextButton.addEventListener("click", chooseNextQuestion);
 retryButton.addEventListener("click", () => {
   answerInput.focus();

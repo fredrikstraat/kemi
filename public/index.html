@@ -55,8 +55,27 @@
             placeholder="Skriv kort. Ett eller två tydliga meningar räcker ofta."
           ></textarea>
 
+          <section id="coachPanel" class="coach-panel is-hidden">
+            <p class="card-label">Hjälp att komma igång</p>
+            <div class="coach-grid">
+              <div class="coach-item">
+                <p class="coach-label">Frågan betyder</p>
+                <p id="coachMeaning"></p>
+              </div>
+              <div class="coach-item">
+                <p class="coach-label">Tänk först på</p>
+                <p id="coachStep"></p>
+              </div>
+              <div class="coach-item coach-item-wide">
+                <p class="coach-label">Du kan börja så här</p>
+                <p id="coachStarter"></p>
+              </div>
+            </div>
+          </section>
+
           <div class="actions">
             <button id="checkButton" class="button button-primary">Kolla svar</button>
+            <button id="coachButton" class="button button-helper">Jag behöver hjälp</button>
             <button id="retryButton" class="button button-secondary is-hidden">Försök igen</button>
             <button id="nextButton" class="button button-ghost">Ny fråga</button>
           </div>
