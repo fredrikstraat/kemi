@@ -37,6 +37,7 @@ const feedbackSchema = {
   type: "object",
   additionalProperties: false,
   required: [
+    "shotResult",
     "gradeBand",
     "encouragement",
     "whatWasGood",
@@ -45,6 +46,10 @@ const feedbackSchema = {
     "idealAnswer"
   ],
   properties: {
+    shotResult: {
+      type: "string",
+      enum: ["Hole in one", "Birdie", "Par", "Bogey", "Double Bogey"]
+    },
     gradeBand: {
       type: "string",
       enum: ["A", "C", "E", "På väg mot E"]
@@ -245,10 +250,16 @@ async function evaluateAnswer({ question, answer }) {
     "Du bedömer bara utifrån materialet nedan och hittar inte på extra fakta.",
     "Skriv enkel svenska. Korta meningar. Snäll ton. Ingen skam eller press.",
     "Bedöm svaret på fyra nivåer: På väg mot E, E, C eller A.",
+    "Sätt också ett golfresultat: Hole in one, Birdie, Par, Bogey eller Double Bogey.",
     "A betyder att svaret tydligt kopplar ihop flera begrepp och visar ett säkert resonemang.",
     "C betyder att svaret förklarar sambandet ganska tydligt med relevanta begrepp.",
     "E betyder att det viktigaste finns med, men enklare och kortare.",
     "På väg mot E betyder att viktiga delar saknas eller är fel.",
+    "Hole in one används för ett ovanligt starkt, klart och komplett svar.",
+    "Birdie används för ett starkt svar med nästan allt viktigt och minst någon tydlig koppling.",
+    "Par används för ett stabilt och tillräckligt svar där kärnan stämmer.",
+    "Bogey används när något viktigt finns men flera delar saknas eller är otydliga.",
+    "Double Bogey används när svaret är för tunt, fel eller missar det viktigaste.",
     "Ge alltid 2 eller 3 korta styrkor, en tydlig nästa sak att lägga till, en mini-ledtråd och ett modell-svar.",
     "Nämn inte att du är en AI och skriv inte om poäng."
   ].join(" ");
@@ -268,6 +279,7 @@ async function evaluateAnswer({ question, answer }) {
     },
     studentAnswer: answer,
     outputRules: [
+      "shotResult ska vara en av: Hole in one, Birdie, Par, Bogey, Double Bogey",
       "encouragement ska vara max 18 ord",
       "whatWasGood ska innehålla 2 eller 3 korta punkter",
       "nextStep ska vara konkret och lätt att göra direkt",

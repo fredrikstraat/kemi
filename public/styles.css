@@ -523,6 +523,90 @@ h1 {
   overflow: clip;
 }
 
+.hole-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.9fr);
+  gap: 0.9rem;
+  margin-bottom: 0.95rem;
+  padding: 0.85rem;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #f4fbeb, #ffffff);
+  border: 2px solid #d8efba;
+}
+
+.hole-hero-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin-top: 0.12rem;
+}
+
+.hole-number-display {
+  font-size: clamp(1.5rem, 3.6vw, 2rem);
+  line-height: 1;
+}
+
+.hole-total-display,
+.hole-course-display {
+  color: var(--ink-soft);
+}
+
+.hole-course-display {
+  margin: 0.32rem 0 0;
+  font-weight: 700;
+}
+
+.hole-progress-dots {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.45rem;
+  align-content: start;
+}
+
+.hole-dot {
+  display: block;
+  min-width: 0;
+  height: 14px;
+  border-radius: 999px;
+  background: #dfe8ed;
+  border: 2px solid #d0dbe1;
+}
+
+.hole-dot[data-state="done"] {
+  background: #ccefb1;
+  border-color: #95d364;
+}
+
+.hole-dot[data-current="true"] {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 3px rgba(28, 176, 246, 0.12);
+}
+
+.hole-dot[data-shot="Hole in one"] {
+  background: linear-gradient(180deg, #ffe88d, #ffca2e);
+  border-color: #d3a413;
+}
+
+.hole-dot[data-shot="Birdie"] {
+  background: linear-gradient(180deg, #c8f6cc, #72d47d);
+  border-color: #43a84f;
+}
+
+.hole-dot[data-shot="Par"] {
+  background: linear-gradient(180deg, #dff2ff, #8ed0ff);
+  border-color: #50a8ea;
+}
+
+.hole-dot[data-shot="Bogey"] {
+  background: linear-gradient(180deg, #ffe6be, #ffb565);
+  border-color: #df8a2b;
+}
+
+.hole-dot[data-shot="Double Bogey"] {
+  background: linear-gradient(180deg, #ffd8d1, #ff9180);
+  border-color: #d85a4a;
+}
+
 .feedback-modal {
   position: fixed;
   inset: 0;
@@ -788,12 +872,20 @@ textarea:focus-visible,
   gap: 1rem;
 }
 
+.feedback-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
 .feedback-head h3 {
   margin: 0.35rem 0 0;
   font-size: 1.3rem;
   line-height: 1.2;
 }
 
+.shot-badge,
 .grade-badge {
   min-width: 3.6rem;
   text-align: center;
@@ -801,6 +893,39 @@ textarea:focus-visible,
   border-radius: 18px;
   font-size: 1.15rem;
   font-weight: 900;
+}
+
+.shot-badge {
+  background: #eef7ff;
+  color: #176892;
+}
+
+.shot-badge[data-shot="Hole in one"] {
+  background: linear-gradient(180deg, #ffe88d, #ffca2e);
+  color: #6d4a00;
+}
+
+.shot-badge[data-shot="Birdie"] {
+  background: linear-gradient(180deg, #d5f6d8, #8bdd92);
+  color: #155926;
+}
+
+.shot-badge[data-shot="Par"] {
+  background: linear-gradient(180deg, #dff2ff, #8ed0ff);
+  color: #0d5e90;
+}
+
+.shot-badge[data-shot="Bogey"] {
+  background: linear-gradient(180deg, #ffe7c8, #ffb565);
+  color: #7b4a00;
+}
+
+.shot-badge[data-shot="Double Bogey"] {
+  background: linear-gradient(180deg, #ffd8d1, #ff9587);
+  color: #8a2319;
+}
+
+.grade-badge {
   background: #eef9df;
   color: var(--brand-dark);
 }
@@ -823,6 +948,181 @@ textarea:focus-visible,
 .grade-badge[data-band="På väg mot E"] {
   background: #fde0dc;
   color: #99392c;
+}
+
+.scorecard-panel {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 24;
+  width: min(360px, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  border: 3px solid #d8efba;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 48px rgba(16, 39, 48, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.scorecard-panel.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+  box-shadow: 0 28px 54px rgba(16, 39, 48, 0.28);
+}
+
+.scorecard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.9rem 0.95rem 0.8rem;
+  border-bottom: 1px solid #e7f1dd;
+  background: linear-gradient(180deg, #f4fbeb, #ffffff);
+  cursor: grab;
+}
+
+.scorecard-header h3 {
+  margin: 0.18rem 0 0;
+  font-size: 1.12rem;
+  line-height: 1.2;
+}
+
+.scorecard-summary {
+  margin: 0.28rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.scorecard-close-button,
+.open-scorecard-button {
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.16s ease;
+}
+
+.scorecard-close-button {
+  flex-shrink: 0;
+  padding: 0.62rem 0.9rem;
+  background: #eaf5fb;
+  color: #176892;
+}
+
+.scorecard-close-button:hover,
+.open-scorecard-button:hover {
+  transform: translateY(-1px);
+}
+
+.open-scorecard-button {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 23;
+  padding: 0.82rem 1rem;
+  background: linear-gradient(180deg, #2cc0ff, var(--blue));
+  color: white;
+  box-shadow: 0 16px 34px rgba(16, 39, 48, 0.22);
+}
+
+.scorecard-body {
+  display: grid;
+  gap: 0.5rem;
+  max-height: calc(100vh - 8.9rem);
+  overflow: auto;
+  padding: 0.85rem;
+}
+
+.scorecard-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.68rem 0.75rem;
+  border-radius: 16px;
+  background: #f8fbfd;
+  border: 1px solid #dce8ef;
+}
+
+.scorecard-row[data-current="true"] {
+  border-color: #8ecdf3;
+  background: linear-gradient(180deg, #eef8ff, #ffffff);
+  box-shadow: 0 0 0 3px rgba(28, 176, 246, 0.12);
+}
+
+.scorecard-hole-meta {
+  display: grid;
+  gap: 0.16rem;
+  min-width: 0;
+}
+
+.scorecard-hole-meta strong {
+  font-size: 0.98rem;
+}
+
+.scorecard-hole-meta span {
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
+.scorecard-hole-results {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.scorecard-shot,
+.scorecard-grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 0.38rem 0.72rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.scorecard-shot-hole-in-one {
+  background: linear-gradient(180deg, #ffe88d, #ffca2e);
+  color: #6d4a00;
+}
+
+.scorecard-shot-birdie {
+  background: linear-gradient(180deg, #d5f6d8, #8bdd92);
+  color: #155926;
+}
+
+.scorecard-shot-par {
+  background: linear-gradient(180deg, #dff2ff, #8ed0ff);
+  color: #0d5e90;
+}
+
+.scorecard-shot-bogey {
+  background: linear-gradient(180deg, #ffe7c8, #ffb565);
+  color: #7b4a00;
+}
+
+.scorecard-shot-double-bogey {
+  background: linear-gradient(180deg, #ffd8d1, #ff9587);
+  color: #8a2319;
+}
+
+.scorecard-shot-pending {
+  background: #edf3f6;
+  color: #59707c;
+}
+
+.scorecard-grade {
+  min-width: 2.5rem;
+  background: #eef9df;
+  color: var(--brand-dark);
 }
 
 .feedback-empty {
@@ -884,6 +1184,10 @@ textarea:focus-visible,
   }
 
   .support-box {
+    grid-template-columns: 1fr;
+  }
+
+  .hole-hero {
     grid-template-columns: 1fr;
   }
 
@@ -992,6 +1296,10 @@ textarea:focus-visible,
     gap: 0.75rem;
   }
 
+  .hole-number-display {
+    font-size: 1.45rem;
+  }
+
   h2 {
     font-size: clamp(1.22rem, 5.4vw, 1.55rem);
   }
@@ -1053,6 +1361,30 @@ textarea:focus-visible,
 
   .feedback-head h3 {
     font-size: 1.14rem;
+  }
+
+  .feedback-badges {
+    justify-content: flex-start;
+  }
+
+  .scorecard-panel {
+    top: auto;
+    right: 0.75rem;
+    bottom: calc(5.8rem + env(safe-area-inset-bottom, 0px));
+    left: 0.75rem;
+    width: auto;
+    max-height: min(58vh, 440px);
+  }
+
+  .scorecard-body {
+    max-height: min(44vh, 320px);
+  }
+
+  .open-scorecard-button {
+    top: auto;
+    right: 0.75rem;
+    bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    left: 0.75rem;
   }
 
   .feedback-modal-actions {

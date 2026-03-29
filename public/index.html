@@ -65,6 +65,18 @@
 
           <section class="workspace">
             <section class="question-card">
+              <div class="hole-hero">
+                <div class="hole-hero-copy">
+                  <p class="card-label">Nuvarande hål</p>
+                  <div class="hole-hero-row">
+                    <strong id="holeNumberDisplay" class="hole-number-display">Hål 1</strong>
+                    <span id="holeTotalDisplay" class="hole-total-display">av 18</span>
+                  </div>
+                  <p id="holeCourseDisplay" class="hole-course-display">Mästerskapsbanan</p>
+                </div>
+                <div id="holeProgressDots" class="hole-progress-dots" aria-hidden="true"></div>
+              </div>
+
               <div class="card-top">
                 <div>
                   <p class="card-label">Fråga</p>
@@ -101,8 +113,8 @@
 
               <div class="actions">
                 <button id="checkButton" class="button button-primary">Kolla svar</button>
-                <button id="coachButton" class="button button-helper">Jag behöver hjälp</button>
-                <button id="retryButton" class="button button-secondary is-hidden">Försök igen</button>
+                <button id="coachButton" class="button button-helper">Fråga Ludvid Åberg</button>
+                <button id="retryButton" class="button button-secondary is-hidden">Mulligan</button>
                 <button id="nextButton" class="button button-ghost">Nästa hål</button>
               </div>
             </section>
@@ -153,7 +165,10 @@
               <p class="card-label">Feedback</p>
               <h3 id="feedbackTitle">Här ser du direkt vad som var bra och vad du ska lägga till.</h3>
             </div>
-            <div id="gradeBadge" class="grade-badge">-</div>
+            <div class="feedback-badges">
+              <div id="shotBadge" class="shot-badge">-</div>
+              <div id="gradeBadge" class="grade-badge">-</div>
+            </div>
           </div>
 
           <p id="feedbackEmpty" class="feedback-empty">
@@ -185,7 +200,7 @@
           </div>
 
           <div class="feedback-modal-actions">
-            <button id="feedbackRetryButton" class="button button-helper" type="button">Träna mer på samma hål</button>
+            <button id="feedbackRetryButton" class="button button-helper" type="button">Mulligan</button>
             <button id="feedbackNextButton" class="button button-ghost" type="button">Nästa hål</button>
           </div>
         </div>
@@ -238,6 +253,24 @@
           </div>
         </div>
       </section>
+
+      <section id="scorecardPanel" class="scorecard-panel" aria-label="Scorecard">
+        <div id="scorecardHeader" class="scorecard-header">
+          <div>
+            <p class="card-label">Scorecard</p>
+            <h3 id="scorecardTitle">Mästerskapsbanan</h3>
+            <p id="scorecardSummary" class="scorecard-summary">18 hål • Hcp 36 • 0 spelade</p>
+          </div>
+          <button id="closeScorecardButton" class="scorecard-close-button" type="button" aria-label="Stäng scorecard">
+            Stäng
+          </button>
+        </div>
+        <div id="scorecardBody" class="scorecard-body"></div>
+      </section>
+
+      <button id="openScorecardButton" class="open-scorecard-button is-hidden" type="button">
+        Visa scorecard
+      </button>
     </main>
 
     <script type="module" src="/app.js"></script>

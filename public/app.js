@@ -36,6 +36,7 @@ const closeFeedbackButton = document.querySelector("#closeFeedbackButton");
 const feedbackRetryButton = document.querySelector("#feedbackRetryButton");
 const feedbackNextButton = document.querySelector("#feedbackNextButton");
 const feedbackTitle = document.querySelector("#feedbackTitle");
+const shotBadge = document.querySelector("#shotBadge");
 const gradeBadge = document.querySelector("#gradeBadge");
 const strengthList = document.querySelector("#strengthList");
 const nextStepText = document.querySelector("#nextStepText");
@@ -46,6 +47,10 @@ const feedbackEmpty = document.querySelector("#feedbackEmpty");
 const practiceProgress = document.querySelector("#practiceProgress");
 const progressCaption = document.querySelector("#progressCaption");
 const holeCaption = document.querySelector("#holeCaption");
+const holeNumberDisplay = document.querySelector("#holeNumberDisplay");
+const holeTotalDisplay = document.querySelector("#holeTotalDisplay");
+const holeCourseDisplay = document.querySelector("#holeCourseDisplay");
+const holeProgressDots = document.querySelector("#holeProgressDots");
 const handicapValue = document.querySelector("#handicapValue");
 const pegCount = document.querySelector("#pegCount");
 const ballCount = document.querySelector("#ballCount");
@@ -57,6 +62,19 @@ const currentCourseTitle = document.querySelector("#currentCourseTitle");
 const currentCourseMeta = document.querySelector("#currentCourseMeta");
 const currentCourseHandicap = document.querySelector("#currentCourseHandicap");
 const currentCourseProgress = document.querySelector("#currentCourseProgress");
+const scorecardPanel = document.querySelector("#scorecardPanel");
+const scorecardHeader = document.querySelector("#scorecardHeader");
+const scorecardTitle = document.querySelector("#scorecardTitle");
+const scorecardSummary = document.querySelector("#scorecardSummary");
+const scorecardBody = document.querySelector("#scorecardBody");
+const closeScorecardButton = document.querySelector("#closeScorecardButton");
+const openScorecardButton = document.querySelector("#openScorecardButton");
+
+const scorecardDrag = {
+  active: false,
+  offsetX: 0,
+  offsetY: 0
+};
 
 async function fetchJson(url, options) {
   const response = await fetch(url, options);
@@ -85,6 +103,8 @@ function resetFeedback() {
   feedbackPanel.setAttribute("aria-hidden", "true");
   feedbackEmpty.classList.remove("is-hidden");
   feedbackTitle.textContent = "Här ser du direkt vad som var bra och vad du ska lägga till.";
+  shotBadge.textContent = "-";
+  shotBadge.dataset.shot = "";
   gradeBadge.textContent = "-";
   gradeBadge.dataset.band = "";
   strengthList.innerHTML = "";
@@ -104,7 +124,7 @@ function resetCoachPanel() {
   coachExample.textContent = "";
   coachWords.textContent = "";
   coachButton.disabled = false;
-  coachButton.textContent = "Jag behöver hjälp";
+  coachButton.textContent = "Fråga Ludvid Åberg";
 }
 
 function getCurrentCourseProgress() {
@@ -160,7 +180,10 @@ function setCurrentQuestion(index) {
   focusBadge.classList.toggle("is-hidden", !state.currentQuestion.isFocus);
   sectionBadge.textContent = state.currentQuestion.sectionLabel;
   levelBadge.textContent = `${state.currentQuestion.level}-nivå`;
-  holeCaption.textContent = `Hål ${safeIndex + 1} av ${state.currentCourseQuestions.length}`;
+  holeCaption.textContent = `${state.currentCourse?.title || "Bana"} · Hål ${safeIndex + 1} av ${state.currentCourseQuestions.length}`;
+  holeNumberDisplay.textContent = `Hål ${safeIndex + 1}`;
+  holeTotalDisplay.textContent = `av ${state.currentCourseQuestions.length}`;
+  holeCourseDisplay.textContent = state.currentCourse?.title || "Kemibana";
   questionHint.textContent = state.currentQuestion.hint;
   questionStarter.textContent = state.currentQuestion.starter;
   answerInput.value = "";
@@ -170,6 +193,8 @@ function setCurrentQuestion(index) {
   answerInput.focus();
   resetCoachPanel();
   resetFeedback();
+  renderHoleProgressDots();
+  renderScorecard();
 }
 
 function chooseNextQuestion() {
@@ -183,12 +208,24 @@ function getBandPoints(band) {
   return 1;
 }
 
+function getShotPoints(shot) {
+  if (shot === "Hole in one") return 5;
+  if (shot === "Birdie") return 4;
+  if (shot === "Par") return 3;
+  if (shot === "Bogey") return 2;
+  return 1;
+}
+
+function getShotClassName(shot) {
+  return shot ? shot.toLowerCase().replace(/\s+/g, "-") : "pending";
+}
+
 function calculateRoundProgress(courseId = state.currentCourse?.id, holeCount = state.currentCourseQuestions.length) {
   const progress = getCourseProgressById(courseId);
   const answeredIndexes = Object.keys(progress.resultsByHoleIndex);
   const answeredCount = answeredIndexes.length;
   const answeredBands = answeredIndexes.map(
-    (index) => progress.resultsByHoleIndex[index]
+    (index) => progress.resultsByHoleIndex[index]?.gradeBand || "På väg mot E"
   );
   const averagePoints =
     answeredBands.length > 0
@@ -206,6 +243,115 @@ function calculateRoundProgress(courseId = state.currentCourse?.id, holeCount = 
     clubs: Math.floor(answeredCount / 9),
     holeCount
   };
+}
+
+function renderHoleProgressDots() {
+  holeProgressDots.innerHTML = "";
+
+  const progress = getCurrentCourseProgress();
+
+  state.currentCourseQuestions.forEach((question, index) => {
+    const dot = document.createElement("span");
+    const holeResult = progress.resultsByHoleIndex[index];
+    dot.className = "hole-dot";
+    dot.dataset.state = holeResult ? "done" : "upcoming";
+    dot.dataset.current = String(index === state.currentQuestionIndex);
+
+    if (holeResult?.shotResult) {
+      dot.dataset.shot = holeResult.shotResult;
+      dot.title = `Hål ${index + 1}: ${holeResult.shotResult}`;
+    } else {
+      dot.title = `Hål ${index + 1}`;
+    }
+
+    holeProgressDots.appendChild(dot);
+  });
+}
+
+function renderScorecard() {
+  if (!state.currentCourse) {
+    scorecardTitle.textContent = "Ingen bana vald";
+    scorecardSummary.textContent = "Välj en bana för att se scorecard.";
+    scorecardBody.innerHTML = "";
+    return;
+  }
+
+  const progress = getCurrentCourseProgress();
+  const roundProgress = calculateRoundProgress(
+    state.currentCourse.id,
+    state.currentCourseQuestions.length
+  );
+
+  scorecardTitle.textContent = state.currentCourse.title;
+  scorecardSummary.textContent = `Nu: hål ${state.currentQuestionIndex + 1} av ${state.currentCourseQuestions.length} • Hcp ${roundProgress.handicap} • ${roundProgress.answeredCount} spelade`;
+  scorecardBody.innerHTML = "";
+
+  state.currentCourseQuestions.forEach((question, index) => {
+    const row = document.createElement("div");
+    const holeResult = progress.resultsByHoleIndex[index];
+    const isCurrentHole = index === state.currentQuestionIndex;
+    row.className = "scorecard-row";
+    row.dataset.current = String(isCurrentHole);
+
+    const shotLabel = holeResult?.shotResult || "Ej spelat";
+    const gradeLabel = holeResult?.gradeBand || "-";
+    const currentLabel = isCurrentHole ? "Spelar nu" : question.sectionLabel;
+
+    row.innerHTML = `
+      <div class="scorecard-hole-meta">
+        <strong>Hål ${index + 1}</strong>
+        <span>${currentLabel}</span>
+      </div>
+      <div class="scorecard-hole-results">
+        <span class="scorecard-shot scorecard-shot-${getShotClassName(shotLabel)}">${shotLabel}</span>
+        <span class="scorecard-grade">${gradeLabel}</span>
+      </div>
+    `;
+
+    scorecardBody.appendChild(row);
+  });
+}
+
+function setScorecardOpen(isOpen) {
+  scorecardPanel.classList.toggle("is-hidden", !isOpen);
+  openScorecardButton.classList.toggle("is-hidden", isOpen);
+  scorecardPanel.setAttribute("aria-hidden", String(!isOpen));
+}
+
+function startScorecardDrag(event) {
+  if (window.innerWidth < 760) {
+    return;
+  }
+
+  if (!(event.target instanceof HTMLElement) || event.target.closest("button")) {
+    return;
+  }
+
+  const rect = scorecardPanel.getBoundingClientRect();
+  scorecardPanel.style.left = `${rect.left}px`;
+  scorecardPanel.style.top = `${rect.top}px`;
+  scorecardPanel.style.right = "auto";
+  scorecardPanel.style.bottom = "auto";
+  scorecardDrag.active = true;
+  scorecardDrag.offsetX = event.clientX - rect.left;
+  scorecardDrag.offsetY = event.clientY - rect.top;
+  scorecardPanel.classList.add("is-dragging");
+}
+
+function moveScorecard(event) {
+  if (!scorecardDrag.active) {
+    return;
+  }
+
+  const nextLeft = Math.max(8, event.clientX - scorecardDrag.offsetX);
+  const nextTop = Math.max(8, event.clientY - scorecardDrag.offsetY);
+  scorecardPanel.style.left = `${nextLeft}px`;
+  scorecardPanel.style.top = `${nextTop}px`;
+}
+
+function stopScorecardDrag() {
+  scorecardDrag.active = false;
+  scorecardPanel.classList.remove("is-dragging");
 }
 
 function updatePracticeProgress() {
@@ -239,6 +385,7 @@ function updateCurrentCourseSummary() {
   currentCourseMeta.textContent = `${state.currentCourse.subtitle}. ${state.currentCourse.description}`;
   currentCourseHandicap.textContent = String(progress.handicap);
   currentCourseProgress.textContent = `${progress.answeredCount}/${state.currentCourseQuestions.length}`;
+  renderScorecard();
 }
 
 function renderCoursePicker() {
@@ -295,6 +442,7 @@ function selectCourse(courseId) {
   setCurrentQuestion(0);
   updatePracticeProgress();
   updateCurrentCourseSummary();
+  renderScorecard();
 }
 
 function renderFeedback(feedback) {
@@ -303,6 +451,8 @@ function renderFeedback(feedback) {
   feedbackPanel.setAttribute("aria-hidden", "false");
   feedbackEmpty.classList.add("is-hidden");
   feedbackTitle.textContent = feedback.encouragement;
+  shotBadge.textContent = feedback.shotResult;
+  shotBadge.dataset.shot = feedback.shotResult;
   gradeBadge.textContent = feedback.gradeBand;
   gradeBadge.dataset.band = feedback.gradeBand;
 
@@ -422,10 +572,14 @@ async function checkAnswer() {
 
     currentProgress.answersChecked += 1;
     currentProgress.resultsByHoleIndex[state.currentQuestionIndex] =
-      data.feedback.gradeBand;
+      {
+        gradeBand: data.feedback.gradeBand,
+        shotResult: data.feedback.shotResult
+      };
     updatePracticeProgress();
     updateCurrentCourseSummary();
     renderCoursePicker();
+    renderHoleProgressDots();
     announceRewardChanges(previousProgress, calculateRoundProgress());
     renderFeedback(data.feedback);
   } catch (error) {
@@ -462,13 +616,18 @@ async function getCoachHelp() {
     showStatus(error.message, "error");
   } finally {
     coachButton.disabled = false;
-    coachButton.textContent = "Jag behöver hjälp";
+    coachButton.textContent = "Fråga Ludvid Åberg";
   }
 }
 
 checkButton.addEventListener("click", checkAnswer);
 coachButton.addEventListener("click", getCoachHelp);
 nextButton.addEventListener("click", chooseNextQuestion);
+openScorecardButton.addEventListener("click", () => setScorecardOpen(true));
+closeScorecardButton.addEventListener("click", () => setScorecardOpen(false));
+scorecardHeader.addEventListener("pointerdown", startScorecardDrag);
+window.addEventListener("pointermove", moveScorecard);
+window.addEventListener("pointerup", stopScorecardDrag);
 closeCoachButton.addEventListener("click", closeCoachModal);
 coachBackButton.addEventListener("click", () => {
   closeCoachModal();
@@ -501,7 +660,7 @@ coachPanel.addEventListener("click", (event) => {
 });
 retryButton.addEventListener("click", () => {
   answerInput.focus();
-  showStatus("Bra, testa igen och lägg till det som saknas.", "ok");
+  showStatus("Ta en Mulligan och prova igen.", "ok");
 });
 
 document.addEventListener("keydown", (event) => {
