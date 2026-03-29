@@ -277,6 +277,98 @@ export const questionBank = [
   }
 ];
 
+export const courseBank = [
+  {
+    id: "chapter-18",
+    title: "Mästerskapsbanan",
+    subtitle: "18 hål - hela kapitlet",
+    holeCount: 18,
+    theme: "chapter",
+    description: "Spela igenom hela kemi-kapitlet från början till slut med tre extra repetitionshål.",
+    holeIds: [
+      "water-fat",
+      "like-dissolves-like",
+      "tensider",
+      "brush-teeth",
+      "fluoride-ph",
+      "why-smell",
+      "deodorant-bacteria",
+      "evaporation-smell",
+      "deo-antiperspirant",
+      "natural-signals",
+      "natural-artificial",
+      "body-risks",
+      "manufactured-risks",
+      "dangerous-substances",
+      "active-choices",
+      "like-dissolves-like",
+      "evaporation-smell",
+      "dangerous-substances"
+    ]
+  },
+  {
+    id: "clean-9",
+    title: "Renlighetsbanan",
+    subtitle: "9 hål - kroppen blir ren",
+    holeCount: 9,
+    theme: "clean",
+    description: "Fokusera på vatten, fett, tensider, tänder och pH.",
+    holeIds: [
+      "water-fat",
+      "like-dissolves-like",
+      "tensider",
+      "brush-teeth",
+      "fluoride-ph",
+      "water-fat",
+      "tensider",
+      "fluoride-ph",
+      "like-dissolves-like"
+    ]
+  },
+  {
+    id: "smell-9",
+    title: "Doftbanan",
+    subtitle: "9 hål - lukt och molekyler",
+    holeCount: 9,
+    theme: "smell",
+    description: "Träna på lukt, bakterier, parfym och naturens doftsignaler.",
+    holeIds: [
+      "why-smell",
+      "deodorant-bacteria",
+      "evaporation-smell",
+      "deo-antiperspirant",
+      "natural-signals",
+      "why-smell",
+      "deodorant-bacteria",
+      "evaporation-smell",
+      "natural-signals"
+    ]
+  },
+  {
+    id: "choices-9",
+    title: "Miljöbanan",
+    subtitle: "9 hål - aktiva val",
+    holeCount: 9,
+    theme: "choices",
+    description: "Spela dig igenom risker, kroppen och smarta val i vardagen.",
+    holeIds: [
+      "natural-artificial",
+      "body-risks",
+      "manufactured-risks",
+      "dangerous-substances",
+      "active-choices",
+      "body-risks",
+      "manufactured-risks",
+      "dangerous-substances",
+      "active-choices"
+    ]
+  }
+];
+
 export function getQuestionById(questionId) {
   return questionBank.find((question) => question.id === questionId) || null;
+}
+
+export function getCourseById(courseId) {
+  return courseBank.find((course) => course.id === courseId) || null;
 }

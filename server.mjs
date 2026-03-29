@@ -5,6 +5,8 @@ import { extname, join, normalize, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  courseBank,
+  getCourseById,
   getQuestionById,
   gradingRubric,
   questionBank,
@@ -26,7 +28,9 @@ const STATIC_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8"
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".png": "image/png"
 };
 
 const feedbackSchema = {
@@ -114,6 +118,15 @@ createServer(async (request, response) => {
 
     if (request.method === "GET" && url.pathname === "/api/questions") {
       return sendJson(response, 200, {
+        courses: courseBank.map((course) => ({
+          id: course.id,
+          title: course.title,
+          subtitle: course.subtitle,
+          holeCount: course.holeCount,
+          theme: course.theme,
+          description: course.description,
+          holeIds: course.holeIds
+        })),
         questions: questionBank.map((question) => ({
           id: question.id,
           section: question.section,
@@ -123,8 +136,40 @@ createServer(async (request, response) => {
           focusLabel: question.focusLabel || "",
           prompt: question.prompt,
           hint: question.hint,
-          starter: question.starter
+          starter: question.starter,
+          bookSupport: question.bookSupport || ""
         }))
+      });
+    }
+
+    if (request.method === "GET" && url.pathname.startsWith("/api/courses/")) {
+      const courseId = url.pathname.split("/").pop();
+      const course = getCourseById(courseId || "");
+
+      if (!course) {
+        return sendJson(response, 404, {
+          error: "Banan hittades inte."
+        });
+      }
+
+      return sendJson(response, 200, {
+        course: {
+          id: course.id,
+          title: course.title,
+          subtitle: course.subtitle,
+          holeCount: course.holeCount,
+          theme: course.theme,
+          description: course.description,
+          holes: course.holeIds.map((questionId, index) => {
+            const question = getQuestionById(questionId);
+            return {
+              holeNumber: index + 1,
+              questionId,
+              section: question?.section || "",
+              prompt: question?.prompt || ""
+            };
+          })
+        }
       });
     }
 

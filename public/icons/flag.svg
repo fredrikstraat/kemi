@@ -1,0 +1,21 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pole" x1="30" y1="10" x2="34" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7A8F98"/>
+      <stop offset="1" stop-color="#485960"/>
+    </linearGradient>
+    <linearGradient id="flag" x1="33" y1="12" x2="53" y2="24" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8E83"/>
+      <stop offset="1" stop-color="#D94238"/>
+    </linearGradient>
+    <radialGradient id="grass" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(32 50) rotate(90) scale(8 14)">
+      <stop stop-color="#90DA54"/>
+      <stop offset="1" stop-color="#4E9F2E"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="32" cy="50" rx="14" ry="8" fill="url(#grass)"/>
+  <path d="M32 12V50" stroke="url(#pole)" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M34 13C40 13 43 10.5 50 11V25C43 24.5 40 27 34 27V13Z" fill="url(#flag)"/>
+  <path d="M34 13C40 13 43 10.5 50 11" stroke="#FFC2BC" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/>
+  <ellipse cx="32" cy="50" rx="4.5" ry="2.2" fill="#234A1C" opacity="0.45"/>
+</svg>

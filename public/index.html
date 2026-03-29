@@ -11,90 +11,143 @@
     <main class="app-shell">
       <section class="app-header">
         <div>
-          <p class="app-kicker">Kemiövning</p>
-          <h1>Fokusfrågor för Isak</h1>
+          <p class="app-kicker">Kemi-runda</p>
+          <h1>Isaks kemibana</h1>
+          <p id="holeCaption" class="hole-caption">Välj en bana för att börja spela</p>
+          <p class="desktop-tip">Tangentbord: <strong>Ctrl/Cmd + Enter</strong> kolla svar, <strong>Alt + H</strong> hjälp, <strong>Alt + N</strong> nästa hål</p>
         </div>
-        <div class="header-progress">
-          <p id="progressCaption" class="progress-caption">0 av 10 fokusfrågor tränade</p>
-          <div class="progress-track">
-            <span id="practiceProgress" class="progress-fill"></span>
+        <div class="header-side">
+          <div class="header-progress">
+            <p id="progressCaption" class="progress-caption">0 av 18 frågor spelade</p>
+            <div class="progress-track">
+              <span id="practiceProgress" class="progress-fill"></span>
+            </div>
+          </div>
+          <div class="hero-course-art" aria-hidden="true">
+            <span class="hero-cloud"></span>
+            <span class="hero-cloud hero-cloud-small"></span>
+            <span class="hero-hill"></span>
+            <span class="hero-fairway"></span>
+            <span class="hero-hole"></span>
+            <span class="hero-flag-pole"></span>
+            <span class="hero-flag"></span>
+            <span class="hero-ball"></span>
           </div>
         </div>
       </section>
 
-      <section id="statusBanner" class="status-banner is-hidden"></section>
+      <section class="score-strip">
+        <article class="score-chip">
+          <img class="score-illustration" src="/icons/flag.png" alt="" aria-hidden="true" />
+          <p class="score-label">Handicap</p>
+          <strong id="handicapValue">36</strong>
+        </article>
+        <article class="score-chip">
+          <img class="score-illustration" src="/icons/tee.png" alt="" aria-hidden="true" />
+          <p class="score-label">Peggar</p>
+          <strong id="pegCount">0</strong>
+        </article>
+        <article class="score-chip">
+          <img class="score-illustration" src="/icons/ball.png" alt="" aria-hidden="true" />
+          <p class="score-label">Golfbollar</p>
+          <strong id="ballCount">0</strong>
+        </article>
+        <article class="score-chip">
+          <img class="score-illustration" src="/icons/club.png" alt="" aria-hidden="true" />
+          <p class="score-label">Klubbor</p>
+          <strong id="clubCount">0</strong>
+        </article>
+      </section>
 
-      <section class="workspace">
-        <section class="question-card">
-          <div class="card-top">
-            <div>
-              <p class="card-label">Fråga</p>
-              <h2 id="questionPrompt">Laddar fråga ...</h2>
-            </div>
-            <div class="badges">
-              <span id="focusBadge" class="badge badge-focus is-hidden">Fokusfråga</span>
-              <span id="sectionBadge" class="badge badge-soft">Avsnitt</span>
-              <span id="levelBadge" class="badge badge-strong">Nivå</span>
-            </div>
-          </div>
+      <section class="content-grid">
+        <div class="content-main">
+          <section id="statusBanner" class="status-banner is-hidden"></section>
 
-          <div class="support-box">
-            <div>
-              <p class="support-label">Tänk på</p>
-              <p id="questionHint" class="support-text"></p>
-            </div>
-            <div>
-              <p class="support-label">Börja så här</p>
-              <p id="questionStarter" class="support-text"></p>
-            </div>
-          </div>
+          <section class="workspace">
+            <section class="question-card">
+              <div class="card-top">
+                <div>
+                  <p class="card-label">Fråga</p>
+                  <h2 id="questionPrompt">Laddar fråga ...</h2>
+                </div>
+                <div class="badges">
+                  <span id="focusBadge" class="badge badge-focus is-hidden">Fokusfråga</span>
+                  <span id="sectionBadge" class="badge badge-soft">Avsnitt</span>
+                  <span id="levelBadge" class="badge badge-strong">Nivå</span>
+                </div>
+              </div>
 
-          <label class="answer-label" for="answerInput">Isaks svar</label>
-          <textarea
-            id="answerInput"
-            rows="5"
-            placeholder="Skriv kort. Ett eller två tydliga meningar räcker ofta."
-            autocapitalize="sentences"
-            autocomplete="off"
-            autocorrect="on"
-            enterkeyhint="send"
-          ></textarea>
+              <div class="support-box">
+                <div>
+                  <p class="support-label">Tänk på</p>
+                  <p id="questionHint" class="support-text"></p>
+                </div>
+                <div>
+                  <p class="support-label">Börja så här</p>
+                  <p id="questionStarter" class="support-text"></p>
+                </div>
+              </div>
 
-          <section id="coachPanel" class="coach-panel is-hidden">
-            <p class="card-label">Hjälp att komma igång</p>
-            <div class="coach-grid">
-              <div class="coach-item">
-                <p class="coach-label">Frågan betyder</p>
-                <p id="coachMeaning"></p>
+              <label class="answer-label" for="answerInput">Isaks svar</label>
+              <textarea
+                id="answerInput"
+                rows="5"
+                placeholder="Skriv kort. Ett eller två tydliga meningar räcker ofta."
+                autocapitalize="sentences"
+                autocomplete="off"
+                autocorrect="on"
+                enterkeyhint="send"
+              ></textarea>
+
+              <div class="actions">
+                <button id="checkButton" class="button button-primary">Kolla svar</button>
+                <button id="coachButton" class="button button-helper">Jag behöver hjälp</button>
+                <button id="retryButton" class="button button-secondary is-hidden">Försök igen</button>
+                <button id="nextButton" class="button button-ghost">Nästa hål</button>
               </div>
-              <div class="coach-item">
-                <p class="coach-label">Tänk först på</p>
-                <p id="coachStep"></p>
+            </section>
+          </section>
+        </div>
+
+        <aside class="content-side">
+          <section class="course-dock">
+            <div class="course-dock-copy">
+              <p class="app-kicker">Banor</p>
+              <h2 id="currentCourseTitle" class="section-title">Ingen bana vald</h2>
+              <p id="currentCourseMeta" class="course-dock-meta">Välj en bana för att börja spela.</p>
+            </div>
+            <div class="course-dock-stats">
+              <div class="course-dock-chip">
+                <span class="course-dock-label">Hcp</span>
+                <strong id="currentCourseHandicap">36</strong>
               </div>
-              <div class="coach-item coach-item-wide">
-                <p class="coach-label">Du kan börja så här</p>
-                <p id="coachStarter"></p>
-              </div>
-              <div class="coach-item coach-item-wide">
-                <p class="coach-label">I boken står ungefär</p>
-                <p id="coachBook"></p>
-              </div>
-              <div class="coach-item coach-item-wide">
-                <p class="coach-label">Bra ord att få med</p>
-                <p id="coachWords"></p>
+              <div class="course-dock-chip">
+                <span class="course-dock-label">Spelat</span>
+                <strong id="currentCourseProgress">0/0</strong>
               </div>
             </div>
           </section>
 
-          <div class="actions">
-            <button id="checkButton" class="button button-primary">Kolla svar</button>
-            <button id="coachButton" class="button button-helper">Jag behöver hjälp</button>
-            <button id="retryButton" class="button button-secondary is-hidden">Försök igen</button>
-            <button id="nextButton" class="button button-ghost">Ny fråga</button>
-          </div>
-        </section>
+          <section id="courseSection" class="course-section">
+            <div class="section-heading">
+              <div>
+                <p class="app-kicker">Banval</p>
+                <h2 class="section-title">Välj bana</h2>
+              </div>
+              <p id="courseCaption" class="course-caption">18 hål för hela kapitlet eller 9 hål för en del i taget.</p>
+            </div>
+            <div id="courseGrid" class="course-grid"></div>
+          </section>
+        </aside>
+      </section>
 
-        <section id="feedbackPanel" class="feedback-panel is-empty">
+      <section id="feedbackPanel" class="feedback-modal is-hidden" aria-hidden="true">
+        <div class="feedback-modal-backdrop" data-close-feedback="true"></div>
+        <div class="feedback-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+          <button id="closeFeedbackButton" class="feedback-close-button" type="button" aria-label="Stäng feedback">
+            Stäng
+          </button>
+
           <div class="feedback-head">
             <div>
               <p class="card-label">Feedback</p>
@@ -120,12 +173,70 @@
               <p id="miniHintText"></p>
             </article>
 
+            <article class="feedback-card">
+              <p class="feedback-label">I boken står ungefär</p>
+              <p id="feedbackBookText"></p>
+            </article>
+
             <article class="feedback-card feedback-card-wide">
               <p class="feedback-label">Ett starkare svar kan låta så här</p>
               <p id="idealAnswerText"></p>
             </article>
           </div>
-        </section>
+
+          <div class="feedback-modal-actions">
+            <button id="feedbackRetryButton" class="button button-helper" type="button">Träna mer på samma hål</button>
+            <button id="feedbackNextButton" class="button button-ghost" type="button">Nästa hål</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="coachPanel" class="coach-modal is-hidden" aria-hidden="true">
+        <div class="coach-modal-backdrop" data-close-coach="true"></div>
+        <div class="coach-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="coachTitle">
+          <button id="closeCoachButton" class="feedback-close-button" type="button" aria-label="Stäng hjälp">
+            Stäng
+          </button>
+
+          <div class="feedback-head">
+            <div>
+              <p class="card-label">Coach-hjälp</p>
+              <h3 id="coachTitle">Nu tar vi frågan steg för steg.</h3>
+            </div>
+          </div>
+
+          <div class="coach-grid coach-grid-modal">
+            <div class="coach-item">
+              <p class="coach-label">Frågan betyder</p>
+              <p id="coachMeaning"></p>
+            </div>
+            <div class="coach-item">
+              <p class="coach-label">Tänk först på</p>
+              <p id="coachStep"></p>
+            </div>
+            <div class="coach-item coach-item-wide">
+              <p class="coach-label">Du kan börja så här</p>
+              <p id="coachStarter"></p>
+            </div>
+            <div class="coach-item coach-item-wide">
+              <p class="coach-label">I boken står ungefär</p>
+              <p id="coachBook"></p>
+            </div>
+            <div class="coach-item coach-item-wide">
+              <p class="coach-label">Exempel från boken</p>
+              <p id="coachExample"></p>
+            </div>
+            <div class="coach-item coach-item-wide">
+              <p class="coach-label">Bra ord att få med</p>
+              <p id="coachWords"></p>
+            </div>
+          </div>
+
+          <div class="feedback-modal-actions">
+            <button id="coachBackButton" class="button button-helper" type="button">Tillbaka till svaret</button>
+            <button id="coachTryButton" class="button button-ghost" type="button">Jag vill prova nu</button>
+          </div>
+        </div>
       </section>
     </main>
 
