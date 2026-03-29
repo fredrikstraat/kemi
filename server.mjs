@@ -134,6 +134,7 @@ createServer(async (request, response) => {
         })),
         questions: questionBank.map((question) => ({
           id: question.id,
+          type: question.type || "text",
           section: question.section,
           sectionLabel: question.sectionLabel,
           level: question.level,
@@ -142,7 +143,8 @@ createServer(async (request, response) => {
           prompt: question.prompt,
           hint: question.hint,
           starter: question.starter,
-          bookSupport: question.bookSupport || ""
+          bookSupport: question.bookSupport || "",
+          options: question.options || []
         }))
       });
     }
@@ -189,23 +191,47 @@ createServer(async (request, response) => {
       }
 
       const answer = typeof body.answer === "string" ? body.answer.trim() : "";
+      const hasChoiceSelection = Number.isInteger(body.selectedOptionIndex);
 
-      if (answer.length < 3) {
+      if (question.type === "multiple-choice" && !hasChoiceSelection) {
+        return sendJson(response, 400, {
+          error: "Välj ett svar först."
+        });
+      }
+
+      if (question.type !== "multiple-choice" && answer.length < 3) {
         return sendJson(response, 400, {
           error: "Skriv lite mer först."
         });
       }
 
       if (!OPENAI_API_KEY) {
+        if (question.type === "multiple-choice") {
+          const feedback = evaluateMultipleChoiceAnswer({
+            question,
+            answer,
+            selectedOptionIndex: body.selectedOptionIndex
+          });
+
+          return sendJson(response, 200, { feedback });
+        }
+
         return sendJson(response, 503, {
           error: "OpenAI-nyckel saknas. Lägg in OPENAI_API_KEY i .env och starta om servern."
         });
       }
 
-      const feedback = await evaluateAnswer({
-        question,
-        answer
-      });
+      const feedback =
+        question.type === "multiple-choice"
+          ? evaluateMultipleChoiceAnswer({
+              question,
+              answer,
+              selectedOptionIndex: body.selectedOptionIndex
+            })
+          : await evaluateAnswer({
+              question,
+              answer
+            });
 
       return sendJson(response, 200, { feedback });
     }
@@ -220,7 +246,9 @@ createServer(async (request, response) => {
         });
       }
 
-      const coach = OPENAI_API_KEY
+      const coach = question.type === "multiple-choice"
+        ? buildLocalCoachHelp(question)
+        : OPENAI_API_KEY
         ? await coachQuestion({ question })
         : buildLocalCoachHelp(question);
 
@@ -356,7 +384,8 @@ async function coachQuestion({ question }) {
       starter: question.starter,
       bookSupport: question.bookSupport || "",
       shortAnswer: question.shortAnswer,
-      mustMention: question.mustMention
+      mustMention: question.mustMention,
+      options: question.options || []
     },
     outputRules: [
       "questionInSimpleWords ska vara 1-2 korta meningar",
@@ -395,12 +424,60 @@ async function coachQuestion({ question }) {
 }
 
 function buildLocalCoachHelp(question) {
+  if (question.type === "multiple-choice") {
+    return {
+      questionInSimpleWords: `Frågan vill att du känner igen rätt begrepp eller förklaring.`,
+      firstStep: `Läs alla svarsalternativ och stryk bort de som tydligt inte passar.`,
+      sentenceStarter: question.starter,
+      bookConnection: question.bookSupport || question.shortAnswer,
+      lookForWords: (question.mustMention || []).slice(0, 4)
+    };
+  }
+
   return {
     questionInSimpleWords: `Frågan vill att du visar att du förstår: ${question.prompt}`,
     firstStep: question.hint,
     sentenceStarter: question.starter,
     bookConnection: question.bookSupport || question.shortAnswer,
     lookForWords: (question.mustMention || []).slice(0, 4)
+  };
+}
+
+function evaluateMultipleChoiceAnswer({ question, answer, selectedOptionIndex }) {
+  const safeOptions = Array.isArray(question.options) ? question.options : [];
+  const selectedIndex = Number.isInteger(selectedOptionIndex)
+    ? selectedOptionIndex
+    : safeOptions.findIndex((option) => option === answer);
+  const correctIndex = question.correctOptionIndex;
+  const correctOption = safeOptions[correctIndex] || question.shortAnswer;
+  const isCorrect = selectedIndex === correctIndex;
+
+  if (isCorrect) {
+    return {
+      shotResult: "Birdie",
+      gradeBand: "E",
+      encouragement: "Rätt begrepp. Bra jobbat.",
+      whatWasGood: [
+        "Du valde rätt svar.",
+        "Du känner igen det viktiga begreppet."
+      ],
+      nextStep: "Läs bokraden en gång till så att du minns varför svaret stämmer.",
+      miniHint: "Säg begreppet högt en gång.",
+      idealAnswer: `${correctOption} ${question.shortAnswer}`
+    };
+  }
+
+  return {
+    shotResult: "Bogey",
+    gradeBand: "På väg mot E",
+    encouragement: "Inte riktigt än, men du är nära.",
+    whatWasGood: [
+      "Du tränar på rätt begrepp.",
+      "Nu vet du vad du ska öva mer på."
+    ],
+    nextStep: `Rätt svar är: ${correctOption}`,
+    miniHint: question.bookSupport || "Titta på bokraden och prova igen.",
+    idealAnswer: `${correctOption} ${question.shortAnswer}`
   };
 }
 

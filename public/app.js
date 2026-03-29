@@ -6,8 +6,12 @@ const state = {
   currentCourseQuestions: [],
   currentQuestion: null,
   currentQuestionIndex: 0,
+  selectedChoiceIndex: null,
   progressByCourseId: {},
-  lastHoleIndexByCourseId: {}
+  lastHoleIndexByCourseId: {},
+  selectedReplayIndexes: [],
+  replayQueueIndexes: [],
+  replayQueuePosition: 0
 };
 
 const STORAGE_KEY = "kemi-isak-progress-v1";
@@ -19,6 +23,8 @@ const sectionBadge = document.querySelector("#sectionBadge");
 const levelBadge = document.querySelector("#levelBadge");
 const questionHint = document.querySelector("#questionHint");
 const questionStarter = document.querySelector("#questionStarter");
+const answerLabel = document.querySelector("#answerLabel");
+const choicePanel = document.querySelector("#choicePanel");
 const answerInput = document.querySelector("#answerInput");
 const checkButton = document.querySelector("#checkButton");
 const coachButton = document.querySelector("#coachButton");
@@ -72,6 +78,8 @@ const scorecardSummary = document.querySelector("#scorecardSummary");
 const scorecardBody = document.querySelector("#scorecardBody");
 const closeScorecardButton = document.querySelector("#closeScorecardButton");
 const openScorecardButton = document.querySelector("#openScorecardButton");
+const replaySelectedButton = document.querySelector("#replaySelectedButton");
+const clearReplaySelectionButton = document.querySelector("#clearReplaySelectionButton");
 
 const scorecardDrag = {
   active: false,
@@ -173,7 +181,28 @@ function resetCoachPanel() {
   coachExample.textContent = "";
   coachWords.textContent = "";
   coachButton.disabled = false;
-  coachButton.textContent = "Fråga Ludvid Åberg";
+  coachButton.textContent = "Fråga Ludvig Åberg";
+}
+
+function updateReplayButtons() {
+  const count = state.selectedReplayIndexes.length;
+  replaySelectedButton.disabled = count === 0;
+  clearReplaySelectionButton.disabled = count === 0;
+  replaySelectedButton.textContent = "Spela om valda hål";
+  if (count > 1) {
+    replaySelectedButton.textContent = `Spela om ${count} valda hål`;
+  } else if (count === 1) {
+    replaySelectedButton.textContent = "Spela om 1 valt hål";
+  }
+}
+
+function focusCurrentAnswerInput() {
+  if (state.currentQuestion?.type === "multiple-choice") {
+    choicePanel.querySelector(".choice-option")?.focus();
+    return;
+  }
+
+  answerInput.focus();
 }
 
 function getCurrentCourseProgress() {
@@ -233,16 +262,27 @@ function setCurrentQuestion(index) {
   sectionBadge.textContent = state.currentQuestion.sectionLabel;
   levelBadge.textContent = `${state.currentQuestion.level}-nivå`;
   holeCaption.textContent = `${state.currentCourse?.title || "Bana"} · Hål ${safeIndex + 1} av ${state.currentCourseQuestions.length}`;
+  if (state.replayQueueIndexes.length > 0) {
+    holeCaption.textContent += ` · Omspel ${state.replayQueuePosition + 1} av ${state.replayQueueIndexes.length}`;
+  }
   holeNumberDisplay.textContent = `Hål ${safeIndex + 1}`;
   holeTotalDisplay.textContent = `av ${state.currentCourseQuestions.length}`;
   holeCourseDisplay.textContent = state.currentCourse?.title || "Kemibana";
   questionHint.textContent = state.currentQuestion.hint;
   questionStarter.textContent = state.currentQuestion.starter;
+  state.selectedChoiceIndex = null;
   answerInput.value = "";
+  renderQuestionInput();
   retryButton.classList.add("is-hidden");
   nextButton.textContent =
-    safeIndex === state.currentCourseQuestions.length - 1 ? "Spela om banan" : "Nästa hål";
-  answerInput.focus();
+    state.replayQueueIndexes.length > 0
+      ? state.replayQueuePosition === state.replayQueueIndexes.length - 1
+        ? "Avsluta omspel"
+        : "Nästa valda hål"
+      : safeIndex === state.currentCourseQuestions.length - 1
+        ? "Spela om banan"
+        : "Nästa hål";
+  focusCurrentAnswerInput();
   resetCoachPanel();
   resetFeedback();
   renderHoleProgressDots();
@@ -251,6 +291,22 @@ function setCurrentQuestion(index) {
 }
 
 function chooseNextQuestion() {
+  if (state.replayQueueIndexes.length > 0) {
+    const nextReplayPosition = state.replayQueuePosition + 1;
+    if (nextReplayPosition < state.replayQueueIndexes.length) {
+      state.replayQueuePosition = nextReplayPosition;
+      setCurrentQuestion(state.replayQueueIndexes[nextReplayPosition]);
+      return;
+    }
+
+    const lastHoleIndex = state.currentQuestionIndex;
+    state.replayQueueIndexes = [];
+    state.replayQueuePosition = 0;
+    showStatus("Omspelsrundan är klar. Nu är du tillbaka på banan.", "ok");
+    setCurrentQuestion(lastHoleIndex);
+    return;
+  }
+
   setCurrentQuestion(state.currentQuestionIndex + 1);
 }
 
@@ -271,6 +327,45 @@ function getShotPoints(shot) {
 
 function getShotClassName(shot) {
   return shot ? shot.toLowerCase().replace(/\s+/g, "-") : "pending";
+}
+
+function renderChoiceOptions() {
+  choicePanel.innerHTML = "";
+
+  if (!state.currentQuestion?.options?.length) {
+    return;
+  }
+
+  state.currentQuestion.options.forEach((option, index) => {
+    const optionButton = document.createElement("button");
+    optionButton.type = "button";
+    optionButton.className = "choice-option";
+    optionButton.dataset.selected = String(state.selectedChoiceIndex === index);
+    optionButton.setAttribute("aria-pressed", String(state.selectedChoiceIndex === index));
+    optionButton.innerHTML = `
+      <span class="choice-letter">${String.fromCharCode(65 + index)}</span>
+      <span class="choice-copy">${option}</span>
+    `;
+    optionButton.addEventListener("click", () => {
+      state.selectedChoiceIndex = index;
+      renderChoiceOptions();
+    });
+    choicePanel.appendChild(optionButton);
+  });
+}
+
+function renderQuestionInput() {
+  const isMultipleChoice = state.currentQuestion?.type === "multiple-choice";
+
+  answerLabel.textContent = isMultipleChoice ? "Välj ett svar" : "Isaks svar";
+  choicePanel.classList.toggle("is-hidden", !isMultipleChoice);
+  answerInput.classList.toggle("is-hidden", isMultipleChoice);
+
+  if (isMultipleChoice) {
+    renderChoiceOptions();
+  } else {
+    choicePanel.innerHTML = "";
+  }
 }
 
 function calculateRoundProgress(courseId = state.currentCourse?.id, holeCount = state.currentCourseQuestions.length) {
@@ -343,12 +438,21 @@ function renderScorecard() {
     const row = document.createElement("div");
     const holeResult = progress.resultsByHoleIndex[index];
     const isCurrentHole = index === state.currentQuestionIndex;
+    const isSelectedForReplay = state.selectedReplayIndexes.includes(index);
     row.className = "scorecard-row";
     row.dataset.current = String(isCurrentHole);
+    row.dataset.selected = String(isSelectedForReplay);
+    row.setAttribute("role", "button");
+    row.setAttribute("tabindex", "0");
+    row.setAttribute("aria-pressed", String(isSelectedForReplay));
 
     const shotLabel = holeResult?.shotResult || "Ej spelat";
     const gradeLabel = holeResult?.gradeBand || "-";
-    const currentLabel = isCurrentHole ? "Spelar nu" : question.sectionLabel;
+    const currentLabel = isSelectedForReplay
+      ? "Valt för omspel"
+      : isCurrentHole
+        ? "Spelar nu"
+        : question.sectionLabel;
 
     row.innerHTML = `
       <div class="scorecard-hole-meta">
@@ -361,8 +465,22 @@ function renderScorecard() {
       </div>
     `;
 
+    const toggleSelection = () => {
+      toggleReplayHole(index);
+    };
+
+    row.addEventListener("click", toggleSelection);
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleSelection();
+      }
+    });
+
     scorecardBody.appendChild(row);
   });
+
+  updateReplayButtons();
 }
 
 function setScorecardOpen(isOpen) {
@@ -418,6 +536,60 @@ function updatePracticeProgress() {
   pegCount.textContent = String(progress.pegs);
   ballCount.textContent = String(progress.balls);
   clubCount.textContent = String(progress.clubs);
+}
+
+function toggleReplayHole(index) {
+  if (state.replayQueueIndexes.length > 0) {
+    showStatus("Omspel pågår redan. Spela klart de valda hålen först.", "warn");
+    return;
+  }
+
+  const currentProgress = getCurrentCourseProgress();
+  if (!currentProgress.resultsByHoleIndex[index]) {
+    showStatus("Det hålet är inte spelat ännu, så det finns inget att spela om än.", "warn");
+    return;
+  }
+
+  if (state.selectedReplayIndexes.includes(index)) {
+    state.selectedReplayIndexes = state.selectedReplayIndexes.filter((item) => item !== index);
+  } else {
+    state.selectedReplayIndexes = [...state.selectedReplayIndexes, index].sort((a, b) => a - b);
+  }
+
+  renderScorecard();
+}
+
+function clearReplaySelection() {
+  state.selectedReplayIndexes = [];
+  renderScorecard();
+}
+
+function startReplayForSelectedHoles() {
+  if (!state.currentCourse || state.selectedReplayIndexes.length === 0) {
+    return;
+  }
+
+  const currentProgress = getCurrentCourseProgress();
+
+  state.selectedReplayIndexes.forEach((holeIndex) => {
+    delete currentProgress.resultsByHoleIndex[holeIndex];
+  });
+
+  state.replayQueueIndexes = [...state.selectedReplayIndexes];
+  state.replayQueuePosition = 0;
+  state.selectedReplayIndexes = [];
+  saveAppState();
+  updatePracticeProgress();
+  updateCurrentCourseSummary();
+  renderCoursePicker();
+  renderHoleProgressDots();
+  showStatus(
+    state.replayQueueIndexes.length === 1
+      ? "Nu spelar Isak om det valda hålet."
+      : `Nu spelar Isak om ${state.replayQueueIndexes.length} valda hål.`,
+    "ok"
+  );
+  setCurrentQuestion(state.replayQueueIndexes[0]);
 }
 
 function updateCurrentCourseSummary() {
@@ -490,6 +662,9 @@ function selectCourse(courseId) {
 
   state.currentCourse = course;
   state.currentCourseQuestions = buildCourseQuestionSequence(course);
+  state.selectedReplayIndexes = [];
+  state.replayQueueIndexes = [];
+  state.replayQueuePosition = 0;
   courseCaption.textContent = `${course.subtitle}. ${course.description}`;
   renderCoursePicker();
   const savedHoleIndex = state.lastHoleIndexByCourseId[course.id];
@@ -613,14 +788,22 @@ async function loadApp() {
 }
 
 async function checkAnswer() {
-  const answer = answerInput.value.trim();
-
   if (!state.currentQuestion) {
     showStatus("Ingen fråga laddad ännu.", "error");
     return;
   }
 
-  if (answer.length < 3) {
+  const isMultipleChoice = state.currentQuestion.type === "multiple-choice";
+  const answer = isMultipleChoice
+    ? state.currentQuestion.options[state.selectedChoiceIndex] || ""
+    : answerInput.value.trim();
+
+  if (isMultipleChoice) {
+    if (!Number.isInteger(state.selectedChoiceIndex)) {
+      showStatus("Välj ett svar först.", "warn");
+      return;
+    }
+  } else if (answer.length < 3) {
     showStatus("Skriv lite mer först, gärna en hel mening.", "warn");
     return;
   }
@@ -639,7 +822,8 @@ async function checkAnswer() {
       },
       body: JSON.stringify({
         questionId: state.currentQuestion.id,
-        answer
+        answer,
+        selectedOptionIndex: state.selectedChoiceIndex
       })
     });
 
@@ -690,13 +874,15 @@ async function getCoachHelp() {
     showStatus(error.message, "error");
   } finally {
     coachButton.disabled = false;
-    coachButton.textContent = "Fråga Ludvid Åberg";
+    coachButton.textContent = "Fråga Ludvig Åberg";
   }
 }
 
 checkButton.addEventListener("click", checkAnswer);
 coachButton.addEventListener("click", getCoachHelp);
 nextButton.addEventListener("click", chooseNextQuestion);
+replaySelectedButton.addEventListener("click", startReplayForSelectedHoles);
+clearReplaySelectionButton.addEventListener("click", clearReplaySelection);
 openScorecardButton.addEventListener("click", () => setScorecardOpen(true));
 closeScorecardButton.addEventListener("click", () => setScorecardOpen(false));
 scorecardHeader.addEventListener("pointerdown", startScorecardDrag);
@@ -705,16 +891,20 @@ window.addEventListener("pointerup", stopScorecardDrag);
 closeCoachButton.addEventListener("click", closeCoachModal);
 coachBackButton.addEventListener("click", () => {
   closeCoachModal();
-  answerInput.focus();
+  focusCurrentAnswerInput();
 });
 coachTryButton.addEventListener("click", () => {
   closeCoachModal();
-  answerInput.focus();
+  focusCurrentAnswerInput();
 });
 closeFeedbackButton.addEventListener("click", closeFeedbackModal);
 feedbackRetryButton.addEventListener("click", () => {
   closeFeedbackModal();
-  answerInput.focus();
+  if (state.currentQuestion?.type === "multiple-choice") {
+    state.selectedChoiceIndex = null;
+    renderChoiceOptions();
+  }
+  focusCurrentAnswerInput();
 });
 feedbackNextButton.addEventListener("click", () => {
   closeFeedbackModal();
@@ -733,7 +923,11 @@ coachPanel.addEventListener("click", (event) => {
   }
 });
 retryButton.addEventListener("click", () => {
-  answerInput.focus();
+  if (state.currentQuestion?.type === "multiple-choice") {
+    state.selectedChoiceIndex = null;
+    renderChoiceOptions();
+  }
+  focusCurrentAnswerInput();
   showStatus("Ta en Mulligan och prova igen.", "ok");
 });
 

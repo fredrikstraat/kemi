@@ -100,7 +100,8 @@
                 </div>
               </div>
 
-              <label class="answer-label" for="answerInput">Isaks svar</label>
+              <label id="answerLabel" class="answer-label" for="answerInput">Isaks svar</label>
+              <div id="choicePanel" class="choice-panel is-hidden" aria-live="polite"></div>
               <textarea
                 id="answerInput"
                 rows="5"
@@ -113,7 +114,7 @@
 
               <div class="actions">
                 <button id="checkButton" class="button button-primary">Kolla svar</button>
-                <button id="coachButton" class="button button-helper">Fråga Ludvid Åberg</button>
+                <button id="coachButton" class="button button-helper">Fråga Ludvig Åberg</button>
                 <button id="retryButton" class="button button-secondary is-hidden">Mulligan</button>
                 <button id="nextButton" class="button button-ghost">Nästa hål</button>
               </div>
@@ -228,7 +229,7 @@
               alt="Ludvig Åberg som golfcoach"
               onerror="this.closest('.coach-hero').style.display='none'"
             />
-            <p class="coach-hero-text">Ludvid visar vägen steg för steg.</p>
+            <p class="coach-hero-text">Ludvig visar vägen steg för steg.</p>
           </div>
 
           <div class="coach-grid coach-grid-modal">
@@ -277,6 +278,10 @@
           </button>
         </div>
         <div id="scorecardBody" class="scorecard-body"></div>
+        <div class="scorecard-actions">
+          <button id="replaySelectedButton" class="button button-helper" type="button">Spela om valda hål</button>
+          <button id="clearReplaySelectionButton" class="button button-secondary" type="button">Rensa val</button>
+        </div>
       </section>
 
       <button id="openScorecardButton" class="open-scorecard-button is-hidden" type="button">

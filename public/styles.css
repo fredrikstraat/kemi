@@ -728,6 +728,55 @@ h2 {
   font-weight: 800;
 }
 
+.choice-panel {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.choice-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.78rem 0.85rem;
+  border: 2px solid #d8e4ea;
+  border-radius: 18px;
+  background: #fbfffe;
+  color: var(--ink);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.choice-option:hover {
+  transform: translateY(-1px);
+  border-color: #b7ddee;
+}
+
+.choice-option[data-selected="true"] {
+  border-color: var(--blue);
+  background: linear-gradient(180deg, #eef8ff, #ffffff);
+  box-shadow: 0 0 0 4px rgba(28, 176, 246, 0.12);
+}
+
+.choice-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: #e8f7ff;
+  color: #176892;
+  font-weight: 900;
+}
+
+.choice-copy {
+  line-height: 1.4;
+}
+
 textarea {
   width: 100%;
   min-height: 132px;
@@ -1079,6 +1128,12 @@ textarea:focus-visible,
   box-shadow: 0 0 0 3px rgba(28, 176, 246, 0.12);
 }
 
+.scorecard-row[data-selected="true"] {
+  border-color: #f0c14d;
+  background: linear-gradient(180deg, #fff8db, #ffffff);
+  box-shadow: 0 0 0 3px rgba(255, 207, 63, 0.18);
+}
+
 .scorecard-hole-meta {
   display: grid;
   gap: 0.16rem;
@@ -1149,6 +1204,21 @@ textarea:focus-visible,
   min-width: 2.5rem;
   background: #eef9df;
   color: var(--brand-dark);
+}
+
+.scorecard-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  padding: 0 0.85rem 0.85rem;
+  border-top: 1px solid #e7f1dd;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff 18%);
+}
+
+.scorecard-actions .button {
+  min-width: 0;
+  min-height: 48px;
+  box-shadow: none;
 }
 
 .feedback-empty {
@@ -1363,6 +1433,11 @@ textarea:focus-visible,
     font-size: 0.98rem;
   }
 
+  .choice-option {
+    padding: 0.74rem 0.78rem;
+    gap: 0.6rem;
+  }
+
   .button-primary {
     order: 1;
   }
@@ -1415,6 +1490,10 @@ textarea:focus-visible,
 
   .scorecard-body {
     max-height: min(44vh, 320px);
+  }
+
+  .scorecard-actions {
+    grid-template-columns: 1fr;
   }
 
   .open-scorecard-button {
@@ -1506,6 +1585,10 @@ textarea:focus-visible,
 
   .badges {
     gap: 0.35rem;
+  }
+
+  .choice-option {
+    border-radius: 16px;
   }
 
   .badge {
@@ -1637,6 +1720,11 @@ textarea:focus-visible,
 
   .scorecard-hole-results {
     justify-content: flex-start;
+  }
+
+  .scorecard-actions {
+    padding: 0 0.7rem 0.7rem;
+    gap: 0.5rem;
   }
 
   .open-scorecard-button {
