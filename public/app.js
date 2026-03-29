@@ -6,8 +6,11 @@ const state = {
   currentCourseQuestions: [],
   currentQuestion: null,
   currentQuestionIndex: 0,
-  progressByCourseId: {}
+  progressByCourseId: {},
+  lastHoleIndexByCourseId: {}
 };
+
+const STORAGE_KEY = "kemi-isak-progress-v1";
 
 const statusBanner = document.querySelector("#statusBanner");
 const questionPrompt = document.querySelector("#questionPrompt");
@@ -85,6 +88,52 @@ async function fetchJson(url, options) {
   }
 
   return data;
+}
+
+function saveAppState() {
+  try {
+    const payload = {
+      currentCourseId: state.currentCourse?.id || null,
+      currentQuestionIndex: state.currentQuestionIndex,
+      progressByCourseId: state.progressByCourseId,
+      lastHoleIndexByCourseId: state.lastHoleIndexByCourseId
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch (_error) {
+    // Ignore localStorage failures so practice can continue.
+  }
+}
+
+function loadSavedAppState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const saved = JSON.parse(raw);
+    if (!saved || typeof saved !== "object") {
+      return null;
+    }
+
+    return {
+      currentCourseId:
+        typeof saved.currentCourseId === "string" ? saved.currentCourseId : null,
+      currentQuestionIndex:
+        Number.isInteger(saved.currentQuestionIndex) ? saved.currentQuestionIndex : 0,
+      progressByCourseId:
+        saved.progressByCourseId && typeof saved.progressByCourseId === "object"
+          ? saved.progressByCourseId
+          : {},
+      lastHoleIndexByCourseId:
+        saved.lastHoleIndexByCourseId && typeof saved.lastHoleIndexByCourseId === "object"
+          ? saved.lastHoleIndexByCourseId
+          : {}
+    };
+  } catch (_error) {
+    return null;
+  }
 }
 
 function showStatus(message, tone = "info") {
@@ -174,6 +223,9 @@ function setCurrentQuestion(index) {
 
   state.currentQuestionIndex = safeIndex;
   state.currentQuestion = state.currentCourseQuestions[safeIndex];
+  if (state.currentCourse?.id) {
+    state.lastHoleIndexByCourseId[state.currentCourse.id] = safeIndex;
+  }
 
   questionPrompt.textContent = state.currentQuestion.prompt;
   focusBadge.textContent = state.currentQuestion.focusLabel || "Fokusfråga";
@@ -195,6 +247,7 @@ function setCurrentQuestion(index) {
   resetFeedback();
   renderHoleProgressDots();
   renderScorecard();
+  saveAppState();
 }
 
 function chooseNextQuestion() {
@@ -439,10 +492,12 @@ function selectCourse(courseId) {
   state.currentCourseQuestions = buildCourseQuestionSequence(course);
   courseCaption.textContent = `${course.subtitle}. ${course.description}`;
   renderCoursePicker();
-  setCurrentQuestion(0);
+  const savedHoleIndex = state.lastHoleIndexByCourseId[course.id];
+  setCurrentQuestion(Number.isInteger(savedHoleIndex) ? savedHoleIndex : 0);
   updatePracticeProgress();
   updateCurrentCourseSummary();
   renderScorecard();
+  saveAppState();
 }
 
 function renderFeedback(feedback) {
@@ -523,6 +578,11 @@ async function loadApp() {
     state.questionMap = new Map(
       state.questions.map((question) => [question.id, question])
     );
+    const savedState = loadSavedAppState();
+    if (savedState) {
+      state.progressByCourseId = savedState.progressByCourseId;
+      state.lastHoleIndexByCourseId = savedState.lastHoleIndexByCourseId;
+    }
 
     if (!status.configured) {
       showStatus(
@@ -533,7 +593,20 @@ async function loadApp() {
       showStatus(`OpenAI är redo. Modellen som används är ${status.model}.`, "ok");
     }
 
-    selectCourse(state.courses[0]?.id);
+    const savedCourseId = savedState?.currentCourseId;
+    const initialCourseId = state.courses.some((course) => course.id === savedCourseId)
+      ? savedCourseId
+      : state.courses[0]?.id;
+
+    if (savedState && initialCourseId) {
+      state.lastHoleIndexByCourseId[initialCourseId] = savedState.currentQuestionIndex;
+    }
+
+    selectCourse(initialCourseId);
+
+    if (savedState && initialCourseId) {
+      showStatus("Fortsätter där Isak slutade senast på den här datorn.", "ok");
+    }
   } catch (error) {
     showStatus(error.message, "error");
   }
@@ -576,6 +649,7 @@ async function checkAnswer() {
         gradeBand: data.feedback.gradeBand,
         shotResult: data.feedback.shotResult
       };
+    saveAppState();
     updatePracticeProgress();
     updateCurrentCourseSummary();
     renderCoursePicker();
