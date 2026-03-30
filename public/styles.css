@@ -567,9 +567,22 @@ h1 {
   display: block;
   min-width: 0;
   height: 14px;
+  padding: 0;
   border-radius: 999px;
   background: #dfe8ed;
   border: 2px solid #d0dbe1;
+  appearance: none;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.hole-dot:hover {
+  transform: translateY(-1px);
+}
+
+.hole-dot:focus-visible {
+  outline: 3px solid rgba(28, 176, 246, 0.28);
+  outline-offset: 2px;
 }
 
 .hole-dot[data-state="done"] {
@@ -1208,7 +1221,7 @@ textarea:focus-visible,
 
 .scorecard-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 0.65rem;
   padding: 0 0.85rem 0.85rem;
   border-top: 1px solid #e7f1dd;

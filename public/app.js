@@ -78,6 +78,7 @@ const scorecardSummary = document.querySelector("#scorecardSummary");
 const scorecardBody = document.querySelector("#scorecardBody");
 const closeScorecardButton = document.querySelector("#closeScorecardButton");
 const openScorecardButton = document.querySelector("#openScorecardButton");
+const goToSelectedButton = document.querySelector("#goToSelectedButton");
 const replaySelectedButton = document.querySelector("#replaySelectedButton");
 const clearReplaySelectionButton = document.querySelector("#clearReplaySelectionButton");
 
@@ -186,8 +187,13 @@ function resetCoachPanel() {
 
 function updateReplayButtons() {
   const count = state.selectedReplayIndexes.length;
+  goToSelectedButton.disabled = count !== 1;
   replaySelectedButton.disabled = count === 0;
   clearReplaySelectionButton.disabled = count === 0;
+  goToSelectedButton.textContent =
+    count === 1
+      ? `Gå till hål ${state.selectedReplayIndexes[0] + 1}`
+      : "Gå till valt hål";
   replaySelectedButton.textContent = "Spela om valda hål";
   if (count > 1) {
     replaySelectedButton.textContent = `Spela om ${count} valda hål`;
@@ -310,6 +316,22 @@ function chooseNextQuestion() {
   setCurrentQuestion(state.currentQuestionIndex + 1);
 }
 
+function jumpToHole(index, message = "") {
+  if (!Number.isInteger(index) || index < 0 || index >= state.currentCourseQuestions.length) {
+    return;
+  }
+
+  state.replayQueueIndexes = [];
+  state.replayQueuePosition = 0;
+  state.selectedReplayIndexes = [];
+
+  if (message) {
+    showStatus(message, "ok");
+  }
+
+  setCurrentQuestion(index);
+}
+
 function getBandPoints(band) {
   if (band === "A") return 4;
   if (band === "C") return 3;
@@ -399,11 +421,13 @@ function renderHoleProgressDots() {
   const progress = getCurrentCourseProgress();
 
   state.currentCourseQuestions.forEach((question, index) => {
-    const dot = document.createElement("span");
+    const dot = document.createElement("button");
     const holeResult = progress.resultsByHoleIndex[index];
     dot.className = "hole-dot";
+    dot.type = "button";
     dot.dataset.state = holeResult ? "done" : "upcoming";
     dot.dataset.current = String(index === state.currentQuestionIndex);
+    dot.setAttribute("aria-label", `Gå till hål ${index + 1}`);
 
     if (holeResult?.shotResult) {
       dot.dataset.shot = holeResult.shotResult;
@@ -411,6 +435,10 @@ function renderHoleProgressDots() {
     } else {
       dot.title = `Hål ${index + 1}`;
     }
+
+    dot.addEventListener("click", () => {
+      jumpToHole(index, `Nu hoppar Isak till hål ${index + 1}.`);
+    });
 
     holeProgressDots.appendChild(dot);
   });
@@ -449,7 +477,7 @@ function renderScorecard() {
     const shotLabel = holeResult?.shotResult || "Ej spelat";
     const gradeLabel = holeResult?.gradeBand || "-";
     const currentLabel = isSelectedForReplay
-      ? "Valt för omspel"
+      ? "Valt hål"
       : isCurrentHole
         ? "Spelar nu"
         : question.sectionLabel;
@@ -544,12 +572,6 @@ function toggleReplayHole(index) {
     return;
   }
 
-  const currentProgress = getCurrentCourseProgress();
-  if (!currentProgress.resultsByHoleIndex[index]) {
-    showStatus("Det hålet är inte spelat ännu, så det finns inget att spela om än.", "warn");
-    return;
-  }
-
   if (state.selectedReplayIndexes.includes(index)) {
     state.selectedReplayIndexes = state.selectedReplayIndexes.filter((item) => item !== index);
   } else {
@@ -562,6 +584,15 @@ function toggleReplayHole(index) {
 function clearReplaySelection() {
   state.selectedReplayIndexes = [];
   renderScorecard();
+}
+
+function goToSelectedHole() {
+  if (state.selectedReplayIndexes.length !== 1) {
+    return;
+  }
+
+  const [selectedHoleIndex] = state.selectedReplayIndexes;
+  jumpToHole(selectedHoleIndex, `Nu hoppar Isak tillbaka till hål ${selectedHoleIndex + 1}.`);
 }
 
 function startReplayForSelectedHoles() {
@@ -881,6 +912,7 @@ async function getCoachHelp() {
 checkButton.addEventListener("click", checkAnswer);
 coachButton.addEventListener("click", getCoachHelp);
 nextButton.addEventListener("click", chooseNextQuestion);
+goToSelectedButton.addEventListener("click", goToSelectedHole);
 replaySelectedButton.addEventListener("click", startReplayForSelectedHoles);
 clearReplaySelectionButton.addEventListener("click", clearReplaySelection);
 openScorecardButton.addEventListener("click", () => setScorecardOpen(true));
